@@ -1,22 +1,19 @@
 // Backend/server.js
 const express = require('express');
 const cors = require('cors');
-const puppeteer = require('puppeteer-core'); // or 'puppeteer'
+const puppeteer = require('puppeteer');
 const cheerio = require('cheerio');
-const fs = require('fs');
 
 const app = express();
 app.use(cors());
 
 const MAX_RETRIES = 3;
-const CHROME_PATH = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
 
 async function fetchPageContent(url) {
   let browser;
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     try {
       browser = await puppeteer.launch({
-        executablePath: CHROME_PATH,
         headless: true,
         args: ['--no-sandbox', '--disable-setuid-sandbox'],
       });
@@ -43,7 +40,7 @@ async function fetchPageContent(url) {
 }
 
 app.get('/', (req, res) => {
-  res.send('Welcome to Panchang API! Use /api/panchang?date=YYYY-MM-DD');
+  res.send('🌞 Welcome to Panchang API! Use /api/panchang?date=YYYY-MM-DD');
 });
 
 app.get('/api/panchang', async (req, res) => {
@@ -61,15 +58,13 @@ app.get('/api/panchang', async (req, res) => {
 
   try {
     const html = await fetchPageContent(url);
-    fs.writeFileSync('debug_panchang.html', html);
-
     const $ = cheerio.load(html);
 
     const panchang = {};
 
     $('.dpPanchang .dpElement').each((_, el) => {
       const key = $(el).find('.dpElementKey').text().trim().replace(/\s+/g, ' ');
-      let value = $(el).find('.dpElementValue').text().trim().replace(/\s+/g, ' ');
+      const value = $(el).find('.dpElementValue').text().trim().replace(/\s+/g, ' ');
       if (key && value) {
         panchang[key] = value;
       }
@@ -78,7 +73,7 @@ app.get('/api/panchang', async (req, res) => {
     if (Object.keys(panchang).length > 0) {
       res.json({ date, panchang });
     } else {
-      res.json({ date, panchang: {}, message: 'Panchang not found for given date.' });
+      res.json({ date, panchang: {}, message: 'Panchang not found for the given date.' });
     }
   } catch (error) {
     console.error('❌ Error fetching Panchang data:', error);
@@ -86,6 +81,8 @@ app.get('/api/panchang', async (req, res) => {
   }
 });
 
-app.listen(5000, () => {
-  console.log('🚀 Backend running at http://localhost:5000');
+// Use dynamic port for Render deployment
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+  console.log(`🚀 Backend running on port ${PORT}`);
 });
