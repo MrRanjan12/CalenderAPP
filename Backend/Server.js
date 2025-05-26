@@ -1,8 +1,8 @@
-// Backend/server.js
 const express = require('express');
 const cors = require('cors');
 const puppeteer = require('puppeteer');
 const cheerio = require('cheerio');
+const fs = require('fs');
 
 const app = express();
 app.use(cors());
@@ -40,7 +40,7 @@ async function fetchPageContent(url) {
 }
 
 app.get('/', (req, res) => {
-  res.send('🌞 Welcome to Panchang API! Use /api/panchang?date=YYYY-MM-DD');
+  res.send('Welcome to Panchang API! Use /api/panchang?date=YYYY-MM-DD');
 });
 
 app.get('/api/panchang', async (req, res) => {
@@ -58,10 +58,11 @@ app.get('/api/panchang', async (req, res) => {
 
   try {
     const html = await fetchPageContent(url);
+    fs.writeFileSync('debug_panchang.html', html);
+
     const $ = cheerio.load(html);
-
     const panchang = {};
-
+    
     $('.dpPanchang .dpElement').each((_, el) => {
       const key = $(el).find('.dpElementKey').text().trim().replace(/\s+/g, ' ');
       const value = $(el).find('.dpElementValue').text().trim().replace(/\s+/g, ' ');
@@ -73,7 +74,7 @@ app.get('/api/panchang', async (req, res) => {
     if (Object.keys(panchang).length > 0) {
       res.json({ date, panchang });
     } else {
-      res.json({ date, panchang: {}, message: 'Panchang not found for the given date.' });
+      res.json({ date, panchang: {}, message: 'Panchang not found for given date.' });
     }
   } catch (error) {
     console.error('❌ Error fetching Panchang data:', error);
@@ -81,8 +82,7 @@ app.get('/api/panchang', async (req, res) => {
   }
 });
 
-// Use dynamic port for Render deployment
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`🚀 Backend running on port ${PORT}`);
+  console.log(`🚀 Backend running at http://localhost:${PORT}`);
 });
