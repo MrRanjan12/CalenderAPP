@@ -16,6 +16,7 @@ async function fetchPageContent(url) {
       browser = await puppeteer.launch({
         headless: true,
         args: ['--no-sandbox', '--disable-setuid-sandbox'],
+        executablePath: puppeteer.executablePath() // ✅ Required for Railway
       });
 
       const page = await browser.newPage();
@@ -58,7 +59,11 @@ app.get('/api/panchang', async (req, res) => {
 
   try {
     const html = await fetchPageContent(url);
-    fs.writeFileSync('debug_panchang.html', html);
+
+    // Optional: write debug file only in development
+    if (process.env.NODE_ENV !== 'production') {
+      fs.writeFileSync('debug_panchang.html', html);
+    }
 
     const $ = cheerio.load(html);
     const panchang = {};
