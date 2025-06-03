@@ -17,7 +17,7 @@ export default function PanchangCalendar() {
     setPanchang(null);
 
     try {
-      const response = await axios.get(' https://calenderapp-duqh.onrender.com/api/panchang', {
+      const response = await axios.get(' https://calenderapp-production-e225.up.railway.app/api/panchang', {
         params: { date }
       });
 
